@@ -1,0 +1,36 @@
+# agent-judge (public repo): nothing site-specific is ever committed.
+
+# site values and secrets: the operator's site env, judge.env and the sanitizer word lists live outside the
+# checkout (~/.config/deck/, ~/.config/judge/); these patterns catch copies dropped into it by mistake
+site.env
+site.env.bak-*
+judge.env
+*.env
+!*.env.example
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+.sanitize-extra
+.sanitize-words
+
+# drill and rejudge output (tools/drill.py writes to a temp dir; never commit what was sent to a judge)
+drill-out/
+rejudge-out/
+
+# python bytecode and tool caches (the hooks never write bytecode into judge/: lib/version.py counts untracked
+# code files as dirty)
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# editor / OS noise
+*.swp
+*.swo
+.DS_Store
+.idea/
+.vscode/
