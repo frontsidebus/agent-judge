@@ -43,7 +43,8 @@ by other judge code. So:
 
 ## Before every commit
 As in the deck: `scripts/check-sanitized.sh --all; echo "exit=$?"` (0 clean, 1 finding, 2 no real-value source),
-gitleaks on the changed paths, and a grep of the added lines for real domains, IPs, user names and home paths.
+gitleaks on the changed paths (it reads the root `.gitleaks.toml`: the default rules plus this
+repo's allowlist of four files that hold secret-shaped fakes on purpose), and a grep of the added lines for real domains, IPs, user names and home paths.
 Install the hook once per clone with `tools/deck-tools/deck-tools install-hooks`.
 
 Tests: `python3 -m pytest judge/tests -q -p no:cacheprovider` and `python3 -m pytest tests -q -p no:cacheprovider`

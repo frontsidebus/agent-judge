@@ -1,0 +1,15 @@
+# gitleaks config for agent-judge: the default rules plus this repo's allowlist additions only (plan §5).
+# The allowlisted files hold secret-SHAPED fakes on purpose: the redaction code's replacement text and test
+# fixtures that check secrets are masked or withheld. Nothing in them is a real credential. Add a path here only
+# with the same justification; prefer building fakes at runtime (judge/tests do that elsewhere).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "redaction code and redaction/withholding test fixtures (fake, secret-shaped)"
+paths = [
+  '''(^|/)judge/lib/redact\.py$''',
+  '''(^|/)judge/tests/test_data_files\.py$''',
+  '''(^|/)judge/tests/test_sitemask\.py$''',
+  '''(^|/)judge/tests/test_evidence_window\.py$''',
+]
