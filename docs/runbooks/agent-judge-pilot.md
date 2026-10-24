@@ -8,9 +8,9 @@ A scripted test suite ran first (runs 1–4, results in [docs/agent-judge.md](..
 
 ## Prerequisites
 
-- [ ] Walter and Covenant healthy (the normal smoke tests from [walter/README.md](../../walter/README.md) and [covenant/README.md](../../covenant/README.md)). Note anything already failing, so it is not blamed on the pilot.
+- [ ] Walter and Covenant healthy (the normal smoke tests from `walter/README.md` in local-inference-deck and `covenant/README.md` in local-inference-deck). Note anything already failing, so it is not blamed on the pilot.
 - [ ] A dedicated git worktree and branch for the build (for example `feat/digest-site`). The judge diffs the worktree, so keep unrelated edits out of it.
-- [ ] `site.env` filled in, including the judge section ([site.env.example](../../site.env.example), `# --- judge`) and `JUDGE_REPO_DIR` (the deck checkout), and reachable by the judge: `~/.config/deck/site.env` (a symlink is fine) or `--site-env FILE` at install time, which `install.sh --apply` records as `SITE_ENV=` in `~/.config/judge/judge.env`. Without it the frontier judge is refused. For the pilot, set `JUDGE_FRONTIER_DAILY_MAX` to a number you are willing to pay for (each call is capped by `JUDGE_FRONTIER_MAX_USD`).
+- [ ] `site.env` filled in, including the judge section (`site.env.example` in local-inference-deck, `# --- judge`) and `JUDGE_REPO_DIR` (the deck checkout), and reachable by the judge: `~/.config/deck/site.env` (a symlink is fine) or `--site-env FILE` at install time, which `install.sh --apply` records as `SITE_ENV=` in `~/.config/judge/judge.env`. Without it the frontier judge is refused. For the pilot, set `JUDGE_FRONTIER_DAILY_MAX` to a number you are willing to pay for (each call is capped by `JUDGE_FRONTIER_MAX_USD`).
 - [ ] `claude` CLI logged in to the normal Anthropic API (frontier mode), and the gateway reachable (local fallback).
 - [ ] `judge/` tests pass: `python3 -m pytest -q judge/tests`.
 - [ ] Backups of what the run may touch: `cp -p ~/.ssh/config ~/.ssh/config.pre-pilot`. The installer backs up the Hermes `config.yaml` itself.
@@ -205,5 +205,5 @@ Summarise at the end: what each checkpoint caught, what slipped through, and wha
 3. Stop the units: `judge/install.sh --uninstall --with-units --start`, or `systemctl --user disable --now <units>`.
 4. If `config.yaml` is not what you expect, restore it: `cp -p $HERMES_HOME/config.yaml.bak-judge-<ts> $HERMES_HOME/config.yaml`.
 5. Remove the seeded faults: reset the pilot branch's context-file and plan changes, restore `~/.ssh/config` from `~/.ssh/config.pre-pilot` if it differs, and put `JUDGE_RUNAWAY_MINUTES` back.
-6. Undo the site deploy on the hosts with the rollback steps in [walter/README.md](../../walter/README.md) and [covenant/README.md](../../covenant/README.md). Each change you approved is in `gate.log`.
+6. Undo the site deploy on the hosts with the rollback steps in `walter/README.md` in local-inference-deck and `covenant/README.md` in local-inference-deck. Each change you approved is in `gate.log`.
 7. Keep `$JUDGE_REVIEW_DIR` until the metrics are written up; it is the pilot's record. Then archive it (`tar czf judge-pilot-<date>.tgz -C "$HERMES_HOME" review`, mode 600) or delete it.
