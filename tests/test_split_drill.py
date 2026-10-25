@@ -111,12 +111,13 @@ def test_drill_three_cases_with_fakes(setup, tmp_path):
     assert sens["main"]["mode"] == "local" and sens["claims"]["mode"] == "frontier-claims"
     # what reached the fakes: the frontier never saw the planted value, the withheld note or the token
     calls = [json.loads(f.read_text()) for f in sorted(rec.iterdir())]
-    assert len(calls) == 5          # infra and mixed: main + rejudge capture each; sensitive: the claims stage
+    assert len(calls) == 3          # infra and mixed: main (input saved as judge-input.txt); sensitive: claims
     sent = "\n".join(c["stdin"] for c in calls)
     assert SITE_MARK not in sent and "DRILL-WITHHELD-" not in sent and "not-a-real-secret-" not in sent
     assert "${BACKEND_LAN_IP}" in sent
     assert seen                      # the local judge ran for the sensitive case (it gets real values on site)
-    # saved input == what the stub received for the rejudge call
+    # saved input == what the stub received for the main stage
+    assert infra["frontier_input"]["saved"].endswith("/judge-input.txt")
     saved = (out / infra["frontier_input"]["saved"]).read_text()
     assert any(saved.strip() and saved.strip() in c["stdin"] for c in calls)
     # nothing printed carries the planted value; the work tree is restored
