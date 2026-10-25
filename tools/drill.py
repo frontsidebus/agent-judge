@@ -25,11 +25,11 @@ run           three synthetic Hermes sessions through the REAL hooks (gate.py, e
               <tmp>/drill-wt origin/main`); the drill refuses a --work that is not infra-class. It restores the
               infra file and removes its own files from --work afterwards.
 
-              What was sent: run_judge.py does not write the main stage's frontier input to the bundle (its
-              comment says judge-input.txt; it is not written: a known follow-up). The drill therefore re-judges
-              each frontier-judged request with `runner/rejudge.py --mode frontier --no-budget`, which builds
-              the input with the same code and saves it as <out>/rejudge/<id>.input.txt (a second frontier
-              call; --no-capture skips it). The sensitive case's claims stage writes claims-input.txt itself.
+              What was sent: run_judge.py saves the main stage's input as evidence/<id>/judge-input.txt (since
+              agent-judge 1.0.1), and the drill checks that file. With an older judge that lacks it, the drill
+              re-judges each frontier-judged request with `runner/rejudge.py --mode frontier --no-budget`, which
+              builds the input with the same code and saves it as <out>/rejudge/<id>.input.txt (a second frontier
+              call). --no-capture skips both. The sensitive case's claims stage writes claims-input.txt itself.
 
 Output: <out>/report.json, also printed. It holds counts, classes, modes, judge names and booleans only. Free text
 (finding notes) is passed through the site mask and has HOME and --out replaced before it is printed, so no site
@@ -253,7 +253,12 @@ class Drill:
                     claims = ev / "claims-input.txt"
                     if claims.exists():
                         run["claims_input"] = self.sent_counts(claims.read_text(errors="replace"), markers, names)
-                    if self.capture and (run.get("main") or {}).get("mode") == "frontier":
+                    if self.capture and (run.get("main") or {}).get("mode") == "frontier" \
+                            and (ev / "judge-input.txt").is_file():
+                        sent = ev / "judge-input.txt"
+                        run["frontier_input"] = dict(self.sent_counts(sent.read_text(errors="replace"), markers, names),
+                                                     rc=0, saved=str(sent.relative_to(self.out)))
+                    elif self.capture and (run.get("main") or {}).get("mode") == "frontier":
                         rj = self.out / "rejudge"
                         p = subprocess.run([sys.executable, str(self.judge / "runner/rejudge.py"), r["id"],
                                             "--mode", "frontier", "--out", str(rj), "--no-budget"],

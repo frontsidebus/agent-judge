@@ -456,6 +456,27 @@ def test_pending_rescans_queue_for_requests_added_during_the_run(env, local, mon
     assert (env / "done" / f"{r2}.json").exists() and (env / "queue" / f"{bad}.json").exists()
 
 
+def test_main_stage_input_is_saved_as_sent(env, frontier, monkeypatch):
+    monkeypatch.setenv("JUDGE_MODE", "frontier")
+    r = rid()
+    enqueue(env, r)
+    assert RJ.main([r]) == 0
+    (call,) = frontier.calls()
+    sent = (env / "evidence" / r / "judge-input.txt").read_text()
+    assert sent and sent in call["stdin"] and "Permission denied (publickey)" in sent
+
+
+def test_hermes_hook_test_sessions_are_not_judged(env, frontier, local, monkeypatch):
+    monkeypatch.setenv("JUDGE_MODE", "frontier")
+    r = rid()
+    enqueue(env, r, session="test-session")                     # `hermes hooks doctor` / `hooks test`
+    assert RJ.main([r]) == 0
+    assert frontier.calls() == [] and local["requests"] == []
+    assert (env / "done" / f"{r}.json").exists() and not (env / "queue" / f"{r}.json").exists()
+    assert not (env / "findings" / f"{r}.json").exists()
+    assert "synthetic Hermes hook test session" in (env / "runner.log").read_text()
+
+
 def test_frontier_cost_is_added_to_usage(env, frontier, monkeypatch, tmp_path):
     monkeypatch.setenv("JUDGE_MODE", "frontier")
     script = tmp_path / "fake-claude-cost"

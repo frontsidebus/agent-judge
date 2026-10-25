@@ -1064,6 +1064,12 @@ def choose_mode(data_class: str) -> Tuple[str, List[str]]:
     return "local", notes
 
 
+# `hermes hooks test` and `hermes hooks doctor` fire the real hook commands with synthetic payloads under this
+# session id (hermes_cli/hooks.py _DEFAULT_PAYLOADS). enqueue.py queues them like any session; the runner drops
+# them unjudged, so a hook health check never costs a judge call or leaves a finding. The hooks stay unchanged.
+SYNTHETIC_SESSIONS = frozenset({"test-session"})
+
+
 def judge_request(request_id: str) -> bool:
     qpath = C.sub("queue") / f"{request_id}.json"
     try:
@@ -1073,6 +1079,10 @@ def judge_request(request_id: str) -> bool:
     except Exception as exc:
         log(f"{request_id}: unreadable request: {exc}")
         return False
+    if request.get("session") in SYNTHETIC_SESSIONS:
+        move_to_done(request_id)
+        log(f"{request_id}: synthetic Hermes hook test session ({request.get('session')}): not judged")
+        return True
 
     evidence_dir, ev_err = ensure_evidence(request_id, request)
     manifest: Dict[str, Any] = {}
@@ -1111,6 +1121,8 @@ def judge_request(request_id: str) -> bool:
         return True
 
     C.atomic_write(evidence_dir / "judge-raw.txt", res["raw_record"] + "\n")
+    if res.get("input") is not None:
+        C.atomic_write(evidence_dir / "judge-input.txt", res["input"])   # exactly what was sent (masked for frontier)
     finding = res["finding"]
     claims_stage(request_id, request, evidence_dir, data_class, res["notes"], versions=versions)
     write_finding(request_id, finding, res["notes"], versions=versions)
